@@ -51,3 +51,24 @@ def plot_corr_matrix(corr_matrix):
     plt.colorbar()
     plt.title('Correlation matrix')
     plt.show()
+
+def remove_correlated_features(data, corr_matrix, threshold):
+    """
+    Remove correlated features from the input data based on the correlation matrix.
+
+    Args:
+        data (numpy.ndarray): Input data matrix.
+        corr_matrix (numpy.ndarray): Pairwise correlation matrix of the input data.
+        threshold (float): defined threshold for correlation values.
+
+    Returns:
+        numpy.ndarray: The cleaned input data matrix after removing correlated features.
+        tuple: A tuple containing the indices of the kept features.
+    """
+    correlated_features = np.where(np.abs(corr_matrix) > threshold)
+    features_to_keep = np.arange(data.shape[1])
+    for i, j in zip(correlated_features[0], correlated_features[1]): 
+        if i != j and i in features_to_keep and j in features_to_keep: # Remove one of the two correlated features
+            features_to_keep = features_to_keep[features_to_keep != j] 
+    filtered_data = data[:, features_to_keep]
+    return filtered_data, features_to_keep
