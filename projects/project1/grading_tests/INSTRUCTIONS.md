@@ -1,6 +1,6 @@
 # Tests for project 1
 
-We provide some tests to check your submission. 
+We provide some tests to check your submission.
 Clone the course repository and run them from this directory:
 
 ```
