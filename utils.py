@@ -63,9 +63,14 @@ def compute_loss_mle(y, tx, w):
     Returns:
         loss (scalar): The mean negative log-likelihood loss.
     """
+    # Compute the predicted probabilities
+    y_pred = tx @ w 
+    
+    # Apply the logistic function (sigmoid)
+    y_pred_prob = 1 / (1 + np.exp(-y_pred))
     
     # Compute the log-likelihood loss
-    loss = np.mean(np.log(1 + np.exp(tx @ w)) - y * tx @ w)
+    loss = -np.mean(y * np.log(y_pred_prob) + (1 - y) * np.log(1 - y_pred_prob))
     
     return loss
 
