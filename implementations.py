@@ -1,10 +1,15 @@
 import numpy as np
+<<<<<<< HEAD:implementations.py
 from utils import (
     compute_loss_mse,
     compute_gradient_mse,
     compute_loss_mle,
     compute_gradient_mle,
 )
+=======
+from project1.utils import compute_loss_mse, compute_gradient_mse, compute_loss_mle, compute_gradient_mle
+
+>>>>>>> sarra:project1/implementations.py
 
 
 def mean_squared_error_gd(y, tx, initial_w, max_iters, gamma):
@@ -16,23 +21,41 @@ def mean_squared_error_gd(y, tx, initial_w, max_iters, gamma):
         initial_w (_type_): numpy array of shape=(D+1, ). The initialization for the model parameters
         max_iters (_type_): a scalar denoting the total number of iterations of GD
         gamma (_type_): a scalar denoting the stepsize.
+<<<<<<< HEAD:implementations.py
 
+=======
+        
+>>>>>>> sarra:project1/implementations.py
     Returns:
         loss: loss value (scalar), corresponding to the input parameters w
         w: model parameters as numpy array of shape (D+1, ).
     """
+<<<<<<< HEAD:implementations.py
 
     # Initialize the model parameters
     w = initial_w
 
+=======
+    
+    # Initialize the model parameters
+    w = initial_w
+    
+>>>>>>> sarra:project1/implementations.py
     # Iterate over the number of max iterations
     for n_iter in range(max_iters):
         # Compute the gradient with respect to w
         gradient = compute_gradient_mse(y, tx, w)
+<<<<<<< HEAD:implementations.py
 
         # Update the model parameters
         w = w - gamma * gradient
 
+=======
+        
+        # Update the model parameters
+        w = w - gamma * gradient
+        
+>>>>>>> sarra:project1/implementations.py
     # Compute the final loss after all iterations
     loss = compute_loss_mse(y, tx, w)
 
@@ -49,11 +72,16 @@ def mean_squared_error_sgd(y, tx, initial_w, max_iters, gamma):
         batch_size: a scalar denoting the number of data points in a mini-batch used for computing the stochastic gradient
         max_iters (_type_): a scalar denoting the total number of iterations of GD
         gamma (_type_): a scalar denoting the stepsize.
+<<<<<<< HEAD:implementations.py
 
+=======
+        
+>>>>>>> sarra:project1/implementations.py
     Returns:
         loss: loss value (scalar), corresponding to the input parameters w
         w: model parameters as numpy array of shape (D+1, ).
     """
+<<<<<<< HEAD:implementations.py
 
     # Initialize the model parameters
     w = initial_w
@@ -61,10 +89,20 @@ def mean_squared_error_sgd(y, tx, initial_w, max_iters, gamma):
     # Number of samples N
     N = len(y)
 
+=======
+    
+    # Initialize the model parameters
+    w = initial_w
+    
+    # Number of samples N
+    N = len(y)
+    
+>>>>>>> sarra:project1/implementations.py
     # Iterate over the number of max iterations
     for n_iter in range(max_iters):
         # Select a random data sample i among the N
         i = np.random.randint(0, N)
+<<<<<<< HEAD:implementations.py
 
         # Compute the gradient with respect to w using the single data sample i
         gradient = compute_gradient_mse(np.array([y[i]]), np.array([tx[i]]), w)
@@ -72,18 +110,33 @@ def mean_squared_error_sgd(y, tx, initial_w, max_iters, gamma):
         # Update the model parameters
         w = w - gamma * gradient
 
+=======
+        
+        # Compute the gradient with respect to w using the single data sample i
+        gradient = compute_gradient_mse(np.array([y[i]]), np.array([tx[i]]), w)
+        
+        # Update the model parameters
+        w = w - gamma * gradient
+        
+>>>>>>> sarra:project1/implementations.py
     # Compute the final loss after all iterations
     loss = compute_loss_mse(y, tx, w)
 
     return w, loss
+<<<<<<< HEAD:implementations.py
 
 
+=======
+    
+    
+>>>>>>> sarra:project1/implementations.py
 def least_squares(y, tx):
     """Least squares regression using normal equations.
 
     Args:
         y (_type_): numpy array of shape (N, )
         tx (_type_): numpy array of shape (N, D+1)
+<<<<<<< HEAD:implementations.py
 
     Returns:
         w: optimal weights, numpy array of shape(D+1,)
@@ -95,6 +148,19 @@ def least_squares(y, tx):
     # Compute the MSE loss with thoptimal weights
     loss = compute_loss_mse(y, tx, w)
 
+=======
+        
+    Returns:
+        w: optimal weights, numpy array of shape(D+1,)
+    """
+    
+    # Compute the optimal weights using the normal equations
+    w = np.linalg.solve(tx.T @ tx, tx.T @ y)
+    
+    # Compute the MSE loss with thoptimal weights
+    loss = compute_loss_mse(y, tx, w)
+    
+>>>>>>> sarra:project1/implementations.py
     return w, loss
 
 
@@ -106,6 +172,7 @@ def ridge_regression(y, tx, lambda_):
         tx (_type_): numpy array of shape=(N, D+1)
         lambda_ (_type_): a scalar denoting the regularization (penalty) term
     """
+<<<<<<< HEAD:implementations.py
 
     # Compute the optimal weights using the normal equations
     w = np.linalg.solve(
@@ -118,6 +185,18 @@ def ridge_regression(y, tx, lambda_):
     return w, loss
 
 
+=======
+    
+    # Compute the optimal weights using the normal equations
+    w = np.linalg.solve(tx.T @ tx + lambda_* 2 * y.shape[0] * np.identity(tx.shape[1]), tx.T @ y)
+    
+    # Compute the MSE loss with thoptimal weights
+    loss = compute_loss_mse(y, tx, w)
+    
+    return w, loss
+    
+    
+>>>>>>> sarra:project1/implementations.py
 def logistic_regression(y, tx, initial_w, max_iters, gamma):
     """Logistic regression algorithm using gradient descent.
 
@@ -127,19 +206,31 @@ def logistic_regression(y, tx, initial_w, max_iters, gamma):
         initial_w: numpy array of shape=(D+1, ). The initialization for the model parameters
         max_iters: a scalar denoting the total number of iterations of GD
         gamma: a scalar denoting the stepsize.
+<<<<<<< HEAD:implementations.py
 
+=======
+        
+>>>>>>> sarra:project1/implementations.py
     Returns:
         loss: loss value (scalar), corresponding to the input parameters w
         w: model parameters as numpy array of shape (D+1, ).
     """
+<<<<<<< HEAD:implementations.py
 
     # Initialize the model parameters
     w = initial_w
 
+=======
+    
+    # Initialize the model parameters
+    w = initial_w
+    
+>>>>>>> sarra:project1/implementations.py
     # Iterate over the number of max iterations
     for n_iter in range(max_iters):
         # Compute the gradient with respect to w
         gradient = compute_gradient_mle(y, tx, w)
+<<<<<<< HEAD:implementations.py
 
         # Update the model parameters
         w = w - gamma * gradient
@@ -150,6 +241,18 @@ def logistic_regression(y, tx, initial_w, max_iters, gamma):
     return w, loss
 
 
+=======
+        
+        # Update the model parameters
+        w = w - gamma * gradient
+    
+    # Compute the final loss after all iterations
+    loss = compute_loss_mle(y, tx, w)
+    
+    return w, loss
+    
+    
+>>>>>>> sarra:project1/implementations.py
 def reg_logistic_regression(y, tx, lambda_, initial_w, max_iters, gamma):
     """Regularized logistic regression using gradient descent.
 
@@ -160,19 +263,31 @@ def reg_logistic_regression(y, tx, lambda_, initial_w, max_iters, gamma):
         initial_w (numpy array): Initial weights of shape (D+1,)
         max_iters (int): Number of iterations for gradient descent
         gamma (float): Step size (learning rate)
+<<<<<<< HEAD:implementations.py
 
+=======
+        
+>>>>>>> sarra:project1/implementations.py
     Returns:
         w (numpy array): The optimized weight vector of shape (D+1,)
         loss (float): The regularized logistic loss (cross-entropy) after all iterations
     """
+<<<<<<< HEAD:implementations.py
 
     # Initialize weights
     w = initial_w
 
+=======
+    
+    # Initialize weights
+    w = initial_w
+    
+>>>>>>> sarra:project1/implementations.py
     # Iterate over the number of max iterations
     for n_iter in range(max_iters):
         # Compute the gradient of the regularized logistic loss
         gradient = compute_gradient_mle(y, tx, w) + 2 * lambda_ * w
+<<<<<<< HEAD:implementations.py
 
         # Update the weights
         w = w - gamma * gradient
@@ -181,3 +296,13 @@ def reg_logistic_regression(y, tx, lambda_, initial_w, max_iters, gamma):
     loss = compute_loss_mle(y, tx, w)
 
     return w, loss
+=======
+        
+        # Update the weights
+        w = w - gamma * gradient
+    
+    # Compute the final loss
+    loss = compute_loss_mle(y, tx, w)
+    
+    return w, loss
+>>>>>>> sarra:project1/implementations.py
