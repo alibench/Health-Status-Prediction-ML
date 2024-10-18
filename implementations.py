@@ -175,3 +175,13 @@ def reg_logistic_regression(y, tx, lambda_, initial_w, max_iters, gamma):
     loss = compute_loss_mle(y, tx, w)
     
     return w, loss
+
+def evaluate_model(y_true, tx, w):
+    """Evaluate the model using RMSE, MSE, and R²."""
+    mse = compute_loss_mse(y_true, tx, w)
+    rmse = np.sqrt(2 * mse)  # Recall that your loss function might be half the standard MSE
+    total_variance = np.sum((y_true - np.mean(y_true)) ** 2)
+    explained_variance = np.sum((y_true - tx @ w) ** 2)
+    r2 = 1 - (explained_variance / total_variance)
+    
+    return {"RMSE": rmse, "MSE": mse, "R²": r2}
