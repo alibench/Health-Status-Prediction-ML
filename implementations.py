@@ -184,4 +184,4 @@ def evaluate_model(y_true, tx, w):
     explained_variance = np.sum((y_true - tx @ w) ** 2)
     r2 = 1 - (explained_variance / total_variance)
     
-    return {"RMSE": rmse, "MSE": mse, "R²": r2}
+    return {"RMSE": rmse, "MSE": mse, "R²": r2} 
