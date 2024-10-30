@@ -1,9 +1,10 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
+
 def replace_placeholders_with_nan(x_train, x_test):
     """
-    Replace specific placeholder values with NaN based on the following rules:
+    Merge features with irrelevant responses, replace them with NaN based on the following rules:
     
     For each column:
         - If the column contains 777777 or 999999, replace all 777777 and 999999 with NaN.
@@ -28,10 +29,10 @@ def replace_placeholders_with_nan(x_train, x_test):
     num_features = x_train_clean.shape[1]
     
     for col in range(num_features):
-        # Extract the column data
+        
         train_col = x_train_clean[:, col]
         
-        # Check for the presence of 777777 or 999999
+        # Else, check for the presence of 777777 or 999999
         has_777777 = np.isin([777777, 999999], train_col).any()
         if has_777777:
             # Replace 777777 and 9999 with NaN in both train and test
@@ -39,7 +40,7 @@ def replace_placeholders_with_nan(x_train, x_test):
             x_test_clean[:, col] = np.where(np.isin(x_test_clean[:, col], [777777, 999999]), np.nan, x_test_clean[:, col])
             continue  # Move to the next column
         
-        # Check for the presence of 99900 or 99000
+        # Else, check for the presence of 99900 or 99000
         has_99900 = np.isin([99900, 99000], train_col).any()
         if has_99900:
             # Replace 99900 and 99000 with NaN in both train and test
@@ -47,7 +48,7 @@ def replace_placeholders_with_nan(x_train, x_test):
             x_test_clean[:, col] = np.where(np.isin(x_test_clean[:, col], [99900, 99000]), np.nan, x_test_clean[:, col])
             continue  # Move to the next column
         
-        # Check for the presence of 7777 or 9799
+        # Else, check for the presence of 7777 or 9799
         has_7777 = np.isin([7777, 9999], train_col).any()
         if has_7777:
             # Replace 7777 and 9999 with NaN in both train and test
@@ -55,7 +56,7 @@ def replace_placeholders_with_nan(x_train, x_test):
             x_test_clean[:, col] = np.where(np.isin(x_test_clean[:, col], [7777, 9999]), np.nan, x_test_clean[:, col])
             continue  # Move to the next column
         
-        # Check for the presence of 777 or 999
+        # Else, check for the presence of 777 or 999
         has_777 = np.isin([777, 999], train_col).any()
         if has_777:
             # Replace 777 and 999 with NaN in both train and test
@@ -74,7 +75,6 @@ def replace_placeholders_with_nan(x_train, x_test):
         # Else, replace 7 and 9 with NaN
         x_train_clean[:, col] = np.where(train_col == 7, np.nan, train_col)
         x_train_clean[:, col] = np.where(x_train_clean[:, col] == 9, np.nan, x_train_clean[:, col])
-        
         x_test_clean[:, col] = np.where(x_test_clean[:, col] == 7, np.nan, x_test_clean[:, col])
         x_test_clean[:, col] = np.where(x_test_clean[:, col] == 9, np.nan, x_test_clean[:, col])
     
@@ -90,12 +90,12 @@ def remove_nan(data, threshold):
         threshold (float): defined threshold for NaN values.
 
     Returns:
-        numpy.ndarray: The cleaned input data matrix after removing columns with too many NaN values.
-        tuple: A tuple containing the indices of the kept features.
+        clean_data (numpy.ndarray): The cleaned input data matrix after removing columns with too many NaN values.
+        columns_to_keep (tuple): A tuple containing the indices of the kept features.
     """
     nan_counts = np.isnan(data).sum(axis=0)
     max_nan_threshold = threshold * data.shape[0]
-    columns_to_keep = nan_counts <= max_nan_threshold # only columns below threshold
+    columns_to_keep = nan_counts <= max_nan_threshold # Only columns below threshold
     clean_data = data[:, columns_to_keep] # Remove columns with too many NaN values
     
     return clean_data, columns_to_keep
@@ -110,13 +110,11 @@ def classify_features(data, threshold):
         threshold (int): Maximum number of unique values to consider a feature as categorical.
 
     Returns:
-        tuple: Two lists containing the indices of categorical and continuous features.
+        categorical_features, continuous_features : Tuple, two lists containing the indices of categorical and continuous features.
     """
-    # Initialize lists to hold feature indices
     categorical_features = []
     continuous_features = []
 
-    # Loop through each feature (column) in the data
     for idx in range(data.shape[1]):
         unique_values = np.unique(data[:, idx][~np.isnan(data[:, idx])])  # Ignore NaNs when counting unique values
         unique_count = len(unique_values)
@@ -129,13 +127,14 @@ def classify_features(data, threshold):
     
     return categorical_features, continuous_features
 
+
 def impute_median_for_continuous_features(x_train, x_test, continuous_indices):
     """
     Impute NaN values in continuous features with the median.
 
     Args:
-        x_train (np.ndarray): Training data with shape (n_samples, n_features).
-        x_test (np.ndarray): Test data with shape (n_samples, n_features).
+        x_train (np.ndarray): Training data with shape (N, D).
+        x_test (np.ndarray): Test data with shape (N, D).
         continuous_indices (list): List of indices corresponding to continuous features.
 
     Returns:
@@ -156,8 +155,19 @@ def impute_median_for_continuous_features(x_train, x_test, continuous_indices):
 
     return x_train, x_test
 
-def impute_mode(x, feature_indices):
-    for idx in feature_indices:
+
+def impute_mode(x, categorical_indices):
+    """
+    Impute NaN values in continuous features with the mode.
+
+    Args:
+        x (np.ndarray): training/test data with shape (N, D).
+        categorical_indices (list): List of indices corresponding to categorical features.
+
+    Returns:
+        np.ndarray: Imputed training/test data.
+    """
+    for idx in categorical_indices:
         col = x[:, idx]
         # Compute the mode, ignoring NaNs
         unique, counts = np.unique(col[~np.isnan(col)], return_counts=True)
@@ -166,6 +176,7 @@ def impute_mode(x, feature_indices):
         col = np.where(np.isnan(col), mode, col)
         x[:, idx] = col
     return x
+
 
 class CapOutliersResult:
     def __init__(self, x_train_capped, x_test_capped, lower_bounds, upper_bounds):
@@ -179,8 +190,8 @@ def cap_outliers(x_train, x_test, continuous_indices, lower_percentile=1, upper_
     Caps outliers in continuous features based on specified percentiles.
 
     Args:
-        x_train (np.ndarray): Training data with shape (n_samples, n_features).
-        x_test (np.ndarray): Test data with shape (n_samples, n_features).
+        x_train (np.ndarray): Training data with shape (N, D).
+        x_test (np.ndarray): Test data with shape (N, D).
         continuous_indices (list): List of indices corresponding to continuous features.
         lower_percentile (float): Lower percentile for capping (default is 1).
         upper_percentile (float): Upper percentile for capping (default is 99).
@@ -188,10 +199,8 @@ def cap_outliers(x_train, x_test, continuous_indices, lower_percentile=1, upper_
     Returns:
         CapOutliersResult: A result object containing capped data and capping bounds.
     """
-    # Copy the data to avoid modifying the original arrays
     x_train_capped = x_train.copy()
     x_test_capped = x_test.copy()
-    
     lower_bounds = {}
     upper_bounds = {}
     
@@ -214,36 +223,6 @@ def cap_outliers(x_train, x_test, continuous_indices, lower_percentile=1, upper_
     
     return CapOutliersResult(x_train_capped, x_test_capped, lower_bounds, upper_bounds)
 
-
-def verify_capping(x, continuous_indices, lower_bounds, upper_bounds):
-    """
-    Verifies that the capping of outliers worked as expected.
-
-    Args:
-        x (np.ndarray): Data to verify with shape (n_samples, n_features).
-        continuous_indices (list): List of indices corresponding to continuous features.
-        lower_bounds (dict): Dictionary of lower bounds used for capping.
-        upper_bounds (dict): Dictionary of upper bounds used for capping.
-
-    Returns:
-        None
-    """
-    for idx in continuous_indices:
-        col = x[:, idx]
-        lower_bound = lower_bounds[idx]
-        upper_bound = upper_bounds[idx]
-        
-        # Check if any value is below the lower bound
-        below = np.sum(col < lower_bound)
-        if below > 0:
-            print(f"Feature {idx}: {below} values below the lower bound ({lower_bound}).")
-        
-        # Check if any value is above the upper bound
-        above = np.sum(col > upper_bound)
-        if above > 0:
-            print(f"Feature {idx}: {above} values above the upper bound ({upper_bound}).")
-    
-    print("Verification completed.")
  
 def compute_corr(data):
     """
@@ -253,7 +232,7 @@ def compute_corr(data):
         data (numpy.ndarray): Input data matrix.
 
     Returns:
-        numpy.ndarray: Pairwise correlation matrix of the input data.
+        corr_matrix (numpy.ndarray): Pairwise correlation matrix of the input data.
     """
     num_features = data.shape[1]
     corr_matrix = np.empty((num_features, num_features))
@@ -264,6 +243,7 @@ def compute_corr(data):
             corr_matrix[i, j] = np.corrcoef(data[valid_rows, i], data[valid_rows, j])[0, 1]
     
     return corr_matrix
+
 
 def plot_corr_matrix(corr_matrix):
     """
@@ -277,6 +257,7 @@ def plot_corr_matrix(corr_matrix):
     plt.title('Correlation matrix')
     plt.show()
 
+
 def remove_correlated_features(data, corr_matrix, threshold):
     """
     Remove correlated features from the input data based on the correlation matrix.
@@ -287,8 +268,8 @@ def remove_correlated_features(data, corr_matrix, threshold):
         threshold (float): defined threshold for correlation values.
 
     Returns:
-        numpy.ndarray: The cleaned input data matrix after removing correlated features.
-        tuple: A tuple containing the indices of the kept features.
+        filtered_data (numpy.ndarray): The cleaned input data matrix after removing correlated features.
+        features_to_keep (list): list containing the indices of the kept features.
     """
     correlated_features = np.where(np.abs(corr_matrix) > threshold)
     features_to_keep = np.arange(data.shape[1])
@@ -298,24 +279,63 @@ def remove_correlated_features(data, corr_matrix, threshold):
     filtered_data = data[:, features_to_keep]
     return filtered_data, features_to_keep
 
+
+def remove_correlated_features_with_catContUpdate(data, corr_matrix, threshold, categorical_features, continuous_features):
+    """
+    Remove correlated features from the input data based on the correlation matrix.
+    
+    Args:
+        data (numpy.ndarray): Input data matrix.
+        corr_matrix (numpy.ndarray): Pairwise correlation matrix of the input data.
+        threshold (float): Defined threshold for correlation values.
+        categorical_features (list or array-like): Indices of categorical features.
+        continuous_features (list or array-like): Indices of continuous features.
+    
+    Returns:
+        filtered_data (numpy.ndarray): The cleaned input data matrix after removing correlated features.
+        features_to_keep (numpy.ndarray): The indices of the kept features (relative to the original data).
+        updated_categorical_features (list): Updated indices of categorical features in the filtered data.
+        updated_continuous_features (list): Updated indices of continuous features in the filtered data.
+    """
+    correlated_features = np.where(np.abs(corr_matrix) > threshold)
+    features_to_keep = np.arange(data.shape[1])
+    features_removed = set()
+    
+    for i, j in zip(correlated_features[0], correlated_features[1]):
+        if i != j and j not in features_removed:
+            if i in features_to_keep and j in features_to_keep:
+                # Decide which feature to remove. Here, arbitrarily remove feature 'j'
+                features_to_keep = features_to_keep[features_to_keep != j]
+                features_removed.add(j)
+    
+    filtered_data = data[:, features_to_keep]
+    
+    # Create a mapping from original indices to new indices
+    index_mapping = {old_idx: new_idx for new_idx, old_idx in enumerate(features_to_keep)}
+    
+    updated_categorical_features = [index_mapping[i] for i in categorical_features if i in index_mapping]
+    updated_continuous_features = [index_mapping[i] for i in continuous_features if i in index_mapping]
+    
+    return filtered_data, features_to_keep, updated_categorical_features, updated_continuous_features
+
+
 def encode_categorical_features_mixed(x, binary_indices, nominal_indices):
     """
     Encode categorical features using Label Encoding for binary features and One-Hot Encoding for nominal features.
 
     Args:
-        x (np.ndarray): Input data array with shape (n_samples, n_features).
+        x (np.ndarray): Input data array with shape (N, D).
         binary_indices (list): List of column indices for binary categorical features.
         nominal_indices (list): List of column indices for nominal categorical features.
 
     Returns:
-        np.ndarray: Data array with encoded categorical features.
+        x (np.ndarray): Data array with encoded categorical features.
     """
     # Label Encoding for Binary Features
     for idx in binary_indices:
         col = x[:, idx]
         unique = np.unique(col)
         if len(unique) != 2:
-            print(f"Warning: Feature {idx} is not binary. Skipping Label Encoding.")
             continue
         mapping = {unique[0]: 0, unique[1]: 1}
         x[:, idx] = np.vectorize(mapping.get)(col)
@@ -326,7 +346,6 @@ def encode_categorical_features_mixed(x, binary_indices, nominal_indices):
         col = x[:, idx].astype(int)
         unique_categories = np.unique(col)
         unique_categories = unique_categories[~np.isnan(unique_categories)]
-        #print(f'One-Hot Encoding Feature {idx} with categories: {unique_categories}')
         for category in unique_categories:
             new_col = (col == category).astype(int).reshape(-1, 1)
             one_hot_columns.append(new_col)
@@ -340,14 +359,34 @@ def encode_categorical_features_mixed(x, binary_indices, nominal_indices):
     
     return x
 
-def standardize_features(x):
-    """Standardize the features (mean = 0, std = 1)."""
-    mean_x = np.mean(x, axis=0)
-    std_x = np.std(x, axis=0)
-    x_standardized = (x - mean_x) / std_x
-    return x_standardized, mean_x, std_x
 
-def variance_threshold(train_data, test_data, threshold=0.0):
+def standardize_features(x_train, x_test, continuous_indices):
+    """
+    Standardize continuous features to have zero mean and unit variance.
+
+    Args:
+        x_train (np.ndarray): Training data with shape (N, D).
+        x_test (np.ndarray): Test data with shape (N, D).
+        continuous_indices (list): List of column indices corresponding to continuous features.
+
+    Returns:
+        x_train (np.ndarray): Scaled training data.
+        x_test (np.ndarray): Scaled test data.
+    """
+    mean = np.mean(x_train[:, continuous_indices], axis=0)
+    std = np.std(x_train[:, continuous_indices], axis=0)
+    std_replaced = np.where(std == 0, 1, std)
+    
+    # Standardize training data
+    x_train[:, continuous_indices] = (x_train[:, continuous_indices] - mean) / std_replaced
+    
+    # Standardize test data using training mean and std
+    x_test[:, continuous_indices] = (x_test[:, continuous_indices] - mean) / std_replaced
+    
+    return x_train, x_test
+
+
+def variance_threshold(x_train, x_test, threshold=0.0):
     """
     Remove features with variance below the specified threshold.
 
@@ -358,9 +397,9 @@ def variance_threshold(train_data, test_data, threshold=0.0):
     Returns:
         np.ndarray: Data array with low-variance features removed.
     """
-    variances = np.var(train_data, axis=0)
+    variances = np.var(x_train, axis=0)
     features_to_keep = variances > threshold
-    return train_data[:, features_to_keep], test_data[:, features_to_keep]
+    return x_train[:, features_to_keep], x_test[:, features_to_keep]
 
 
 def smote(x, y, minority_class, k=5, num_samples=None):
@@ -375,8 +414,8 @@ def smote(x, y, minority_class, k=5, num_samples=None):
         num_samples (int): Number of synthetic samples to generate. If None, generate enough to balance the classes.
 
     Returns:
-        np.ndarray: New feature matrix with synthetic samples added.
-        np.ndarray: New target array with synthetic labels added.
+        x_new (np.ndarray): New feature matrix with synthetic samples added.
+        y_new (np.ndarray): New target array with synthetic labels added.
     """
     minority_indices = np.where(y == minority_class)[0]
     x_minority = x[minority_indices]
@@ -391,7 +430,7 @@ def smote(x, y, minority_class, k=5, num_samples=None):
     synthetic_samples = []
     
     # For each minority sample, find its k-nearest neighbors
-    for i in range(num_samples):
+    for _ in range(num_samples):
         # Randomly select a minority sample
         idx = np.random.randint(0, x_minority.shape[0])
         sample = x_minority[idx]
@@ -425,6 +464,186 @@ def smote(x, y, minority_class, k=5, num_samples=None):
 
     return x_new, y_new
 
-def add_bias_term(x):
-    bias = np.ones((x.shape[0], 1))
-    return np.hstack((bias, x))
+
+def random_undersample(x_train, y_train, minority_element):
+    """
+    Perform random undersampling to balance the dataset by reducing the majority class samples.
+
+    Args:
+        x_train (numpy.ndarray): Feature matrix of training data.
+        y_train (numpy.ndarray): Labels corresponding to x_train.
+        minority_element (int or float): The label of the minority class.
+
+    Returns:
+        x_resampled (numpy.ndarray): Resampled feature matrix.
+        y_resampled (numpy.ndarray): Resampled labels.
+    """
+    # Identify minority and majority class indices
+    minority_indices = np.where(y_train == minority_element)[0]
+    majority_indices = np.where(y_train != minority_element)[0]
+    n_minority = len(minority_indices)
+
+    # Randomly select samples from the majority class
+    np.random.seed(42)  # For reproducibility
+    majority_indices_undersampled = np.random.choice(
+        majority_indices, size=n_minority, replace=False
+    )
+
+    # Combine minority class with undersampled majority class
+    undersampled_indices = np.concatenate([minority_indices, majority_indices_undersampled])
+    np.random.shuffle(undersampled_indices)
+
+    # Resample the data
+    x_resampled = x_train[undersampled_indices]
+    y_resampled = y_train[undersampled_indices]
+
+    return x_resampled, y_resampled
+
+
+def random_oversample(x_train, y_train, minority_element):
+    """
+    Perform random oversampling to balance the dataset by increasing the minority class samples.
+
+    Args:
+        x_train (numpy.ndarray): Feature matrix of training data.
+        y_train (numpy.ndarray): Labels corresponding to x_train.
+        minority_element (int or float): The label of the minority class.
+
+    Returns:
+        x_resampled (numpy.ndarray): Resampled feature matrix.
+        y_resampled (numpy.ndarray): Resampled labels.
+    """
+    # Identify minority and majority class indices, and number of samples needed
+    minority_indices = np.where(y_train == minority_element)[0]
+    majority_indices = np.where(y_train != minority_element)[0]
+    n_minority = len(minority_indices)
+    n_majority = len(majority_indices)
+    n_samples_needed = n_majority - n_minority
+
+    # Randomly sample with replacement from the minority class
+    np.random.seed(42)  # for reproducibility
+    minority_indices_oversampled = np.random.choice(
+        minority_indices, size=n_samples_needed, replace=True
+    )
+
+    # Combine original minority indices with oversampled indices
+    total_minority_indices = np.concatenate([minority_indices, minority_indices_oversampled])
+    oversampled_indices = np.concatenate([majority_indices, total_minority_indices])
+    np.random.shuffle(oversampled_indices)
+
+    # Resample the data
+    x_resampled = x_train[oversampled_indices]
+    y_resampled = y_train[oversampled_indices]
+
+    return x_resampled, y_resampled
+
+
+def kmeans(X, n_clusters, max_iters=10):
+    """
+    KMeans for clustering centroids method.
+    Args:
+        X (numpy.ndarray): Data points (N x D).
+        n_clusters (int): Number of clusters.
+        max_iters (int): Maximum iterations.
+    Returns:
+        numpy.ndarray: Centroids of clusters.
+    """
+    np.random.seed(42)
+    indices = np.random.choice(X.shape[0], n_clusters, replace=False)
+    centroids = X[indices]
+
+    for iteration in range(max_iters):
+        print(f"Iteration {iteration + 1}/{max_iters}")
+        cluster_labels = np.zeros(X.shape[0], dtype=np.int32)
+
+        # Assign clusters without full distance matrix
+        for i in range(X.shape[0]):
+            distances = np.linalg.norm(X[i] - centroids, axis=1)
+            cluster_labels[i] = np.argmin(distances)
+
+        # Update centroids
+        new_centroids = np.zeros_like(centroids)
+        counts = np.zeros(n_clusters, dtype=np.int32)
+
+        for i in range(X.shape[0]):
+            cluster = cluster_labels[i]
+            new_centroids[cluster] += X[i]
+            counts[cluster] += 1
+
+        for k in range(n_clusters):
+            if counts[k] > 0:
+                new_centroids[k] /= counts[k]
+            else:
+                new_centroids[k] = centroids[k]  # Keep old centroid if no points assigned
+
+        # Check for convergence
+        if np.allclose(centroids, new_centroids, atol=1e-4):
+            print("Convergence reached.")
+            break
+
+        centroids = new_centroids
+
+    return centroids
+
+
+def combined_over_under_sampling(X, y, majority_class, minority_class, desired_majority_ratio=0.5, random_state=None):
+    """
+    Balances the dataset by under-sampling the majority class and over-sampling the minority class.
+    
+    Args:
+        X (numpy.ndarray): Feature matrix of shape (n_samples, n_features).
+        y (numpy.ndarray): Label vector of shape (n_samples,). Labels should be binary (e.g., -1 and 1).
+        desired_majority_ratio (float): Desired proportion of majority class samples after resampling (between 0 and 1).
+        random_state (int, optional): Seed for reproducibility.
+    
+    Returns:
+        X_resampled (numpy.ndarray): Resampled feature matrix.
+        y_resampled (numpy.ndarray): Resampled label vector.
+    """
+    np.random.seed(random_state)
+
+    # Separate majority and minority samples
+    X_majority = X[y == majority_class]
+    y_majority = y[y == majority_class]
+    X_minority = X[y == minority_class]
+    y_minority = y[y == minority_class]
+
+    total_samples = len(y)
+    n_desired_majority = int(total_samples * desired_majority_ratio)
+    n_desired_minority = total_samples - n_desired_majority
+
+    # Under-sample majority class
+    if n_desired_majority < len(y_majority):
+        indices_majority = np.random.choice(len(y_majority), n_desired_majority, replace=False)
+        X_majority_resampled = X_majority[indices_majority]
+        y_majority_resampled = y_majority[indices_majority]
+    else:
+        X_majority_resampled = X_majority
+        y_majority_resampled = y_majority
+
+    # Over-sample minority class
+    if n_desired_minority > len(y_minority):
+        n_samples_to_add = n_desired_minority - len(y_minority)
+        indices_minority = np.random.choice(len(y_minority), n_samples_to_add, replace=True)
+        X_minority_oversampled = X_minority[indices_minority]
+        y_minority_oversampled = y_minority[indices_minority]
+        X_minority_resampled = np.vstack((X_minority, X_minority_oversampled))
+        y_minority_resampled = np.hstack((y_minority, y_minority_oversampled))
+    else:
+        indices_minority = np.random.choice(len(y_minority), n_desired_minority, replace=False)
+        X_minority_resampled = X_minority[indices_minority]
+        y_minority_resampled = y_minority[indices_minority]
+
+    # Combine resampled majority and minority classes, then shuffle
+    X_resampled = np.vstack((X_majority_resampled, X_minority_resampled))
+    y_resampled = np.hstack((y_majority_resampled, y_minority_resampled))
+    indices = np.arange(len(y_resampled))
+    np.random.shuffle(indices)
+    X_resampled = X_resampled[indices]
+    y_resampled = y_resampled[indices]
+
+    return X_resampled, y_resampled
+
+
+def feature_processing(x_train, y_train, x_text):
+    return 0
