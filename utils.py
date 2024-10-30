@@ -82,7 +82,6 @@ def compute_gradient_mle(y, tx, w):
         y (_type_): numpy array of shape=(N,)
         tx (_type_): numpy array of shape=(N, D+1)
         w (_type_): numpy array of shape=(D+1, )
-<<<<<<< HEAD:utils.py
 
     Returns:
         gradient: numpy array of shape=(D+1,)
@@ -93,5 +92,41 @@ def compute_gradient_mle(y, tx, w):
 
     # Compute the gradient of the loss
     gradient = tx.T @ (pred - y) / y.shape[0]
-
     return gradient
+
+
+def split_data(x, y, ratio, seed=1):
+    """
+    split the dataset based on the split ratio.
+
+    Args:
+        x: numpy array of shape (N,), N is the number of samples.
+        y: numpy array of shape (N,).
+        ratio: scalar in [0,1]
+        seed: integer.
+
+    Returns:
+        x_tr: numpy array containing the train data.
+        x_te: numpy array containing the test data.
+        y_tr: numpy array containing the train labels.
+        y_te: numpy array containing the test labels.
+    """
+    # set seed
+    np.random.seed(seed)
+    
+    # shuffle indices
+    shuffled = np.random.permutation(len(y))
+    train_size = int(np.floor(ratio * len(y)))    
+
+    # Split indices into training and testing
+    train_indices = shuffled[:train_size]
+    test_indices = shuffled[train_size:]
+    
+    # Use indices to split the data and labels
+    x_tr = x[train_indices]
+    x_te = x[test_indices]
+    y_tr = y[train_indices]
+    y_te = y[test_indices]
+    
+    return x_tr, x_te, y_tr, y_te
+
