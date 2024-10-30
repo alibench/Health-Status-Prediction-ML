@@ -1,6 +1,6 @@
 import numpy as np
-from utils import compute_loss_mse, compute_gradient_mse, compute_loss_mle, compute_gradient_mle
-
+from utils import compute_loss_mse, compute_gradient_mse, compute_loss_mle, compute_gradient_mle, split_data
+from metrics import f1_score
 
 
 def mean_squared_error_gd(y, tx, initial_w, max_iters, gamma):
@@ -175,74 +175,57 @@ def reg_logistic_regression(y, tx, lambda_, initial_w, max_iters, gamma):
     
     return w, loss
 
-def evaluate_model(y_true, tx, w):
-    """Evaluate the model using RMSE, MSE, and R²."""
-    mse = compute_loss_mse(y_true, tx, w)
-    rmse = np.sqrt(2 * mse)  # Recall that your loss function might be half the standard MSE
-    total_variance = np.sum((y_true - np.mean(y_true)) ** 2)
-    explained_variance = np.sum((y_true - tx @ w) ** 2)
-    r2 = 1 - (explained_variance / total_variance)
-    
-    return {"RMSE": rmse, "MSE": mse, "R²": r2} 
+def poly_features(tx, degree):
+    tx_poly = tx
+    for d in range(2, degree + 1):
+        tx_poly = np.c_[tx_poly, np.power(tx, d)]
+        
+    return tx_poly
 
-def build_k_indices(y, k_fold, seed):
+def cross_validation_ridge_regression(yb, tx, lambdas, degrees):
     """
-    Build k indices for k-fold cross-validation.  
-    """
-    num_row = y.shape[0]
-    interval = int(num_row / k_fold)
-    np.random.seed(seed)
-    id = np.random.permutation(num_row)
-    k_id = [id[k * interval: (k + 1) * interval] for k in range(k_fold)]
-    return np.array(k_id)
+    Cross-validate ridge regression with different hyperparameters.
 
-def ridge_regression_with_cross_validation(y, tx, lambdas, k_fold=5, seed=1):
-    """
-    Perform k-fold cross-validation for ridge regression over multiple lambda values
-    and return the best lambda along with the corresponding weights for the full training set.
-    
     Args:
-        y (np.ndarray): Target variable (train set).
-        tx (np.ndarray): Feature matrix (train set).
-        lambdas (list): List of lambda values to test.
-        k_fold (int): Number of folds for cross-validation.
-        seed (int): Seed for random number generator.
-    
+        yb (np.ndarray): Labels of the data.
+        tx (np.ndarray): Features of the data.
+        lambdas (list): List of regularization parameters to test.
+        degrees (list): List of polynomial degrees to test.
+
     Returns:
-        best_lambda (float): The best lambda value.
-        w_best (np.ndarray): The optimal weights for the best lambda.
+        dict: Dictionary containing the best hyperparameters, F1 score, and weights.
     """
     best_lambda = None
-    best_mse = float("inf")
-    k_indices = build_k_indices(y, k_fold, seed)
-    
-    for lambda_ in lambdas:
-        mse_test_total = 0
-        
-        for k in range(k_fold):
-            # Split the data into training and test sets
-            test_idx = k_indices[k]
-            train_idx = np.hstack([k_indices[i] for i in range(k_fold) if i != k])
-            
-            x_train, y_train = tx[train_idx], y[train_idx]
-            x_test, y_test = tx[test_idx], y[test_idx]
-            
-            # Train on training set and compute test MSE
-            w, _ = ridge_regression(y_train, x_train, lambda_)
-            mse_test = compute_loss_mse(y_test, x_test, w)
-            mse_test_total += mse_test
-        
-        avg_mse_test = mse_test_total / k_fold
-        print(f"Lambda: {lambda_}, Average Test MSE: {avg_mse_test}")
-        
-        # Update best lambda based on test MSE
-        if avg_mse_test < best_mse:
-            best_mse = avg_mse_test
-            best_lambda = lambda_
-    
-    print(f"Best lambda: {best_lambda} with MSE: {best_mse}")
-    
-    # Train on full dataset using the best lambda
-    w_best, _ = ridge_regression(y, tx, best_lambda)
-    
-    return best_lambda, w_best
+    best_degree = None
+    best_f1_score = -1
+    best_w = None
+
+    for degree in degrees:
+        # Generate polynomial features
+        x_poly = poly_features(tx, degree)
+
+        # Split data for training and testing
+        tx_train, tx_test, y_train, y_test = split_data(x_poly, yb, 0.8, seed=1)
+
+        for lambda_ in lambdas:
+            # Train the model
+            w, _ = ridge_regression(y_train, tx_train, lambda_)
+
+            # Predict and calculate F1 score
+            y_pred = np.where(tx_test @ w >= 0.5, 1, -1)
+            f1 = f1_score(y_test, y_pred)
+
+            # Update best hyperparameters if this F1 score is higher
+            if f1 > best_f1_score:
+                best_lambda = lambda_
+                best_degree = degree
+                best_f1_score = f1
+                best_w = w
+
+    # Return best hyperparameters and associated metrics
+    return {
+        "lambda": best_lambda,
+        "degree": best_degree,
+        "f1_score": best_f1_score,
+        "weights": best_w,
+    }
