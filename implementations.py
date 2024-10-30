@@ -111,7 +111,6 @@ def ridge_regression(y, tx, lambda_):
     
     return w, loss
     
-    
 def logistic_regression(y, tx, initial_w, max_iters, gamma):
     """Logistic regression algorithm using gradient descent.
 
@@ -185,3 +184,65 @@ def evaluate_model(y_true, tx, w):
     r2 = 1 - (explained_variance / total_variance)
     
     return {"RMSE": rmse, "MSE": mse, "R²": r2} 
+
+def build_k_indices(y, k_fold, seed):
+    """
+    Build k indices for k-fold cross-validation.  
+    """
+    num_row = y.shape[0]
+    interval = int(num_row / k_fold)
+    np.random.seed(seed)
+    id = np.random.permutation(num_row)
+    k_id = [id[k * interval: (k + 1) * interval] for k in range(k_fold)]
+    return np.array(k_id)
+
+def ridge_regression_with_cross_validation(y, tx, lambdas, k_fold=5, seed=1):
+    """
+    Perform k-fold cross-validation for ridge regression over multiple lambda values
+    and return the best lambda along with the corresponding weights for the full training set.
+    
+    Args:
+        y (np.ndarray): Target variable (train set).
+        tx (np.ndarray): Feature matrix (train set).
+        lambdas (list): List of lambda values to test.
+        k_fold (int): Number of folds for cross-validation.
+        seed (int): Seed for random number generator.
+    
+    Returns:
+        best_lambda (float): The best lambda value.
+        w_best (np.ndarray): The optimal weights for the best lambda.
+    """
+    best_lambda = None
+    best_mse = float("inf")
+    k_indices = build_k_indices(y, k_fold, seed)
+    
+    for lambda_ in lambdas:
+        mse_test_total = 0
+        
+        for k in range(k_fold):
+            # Split the data into training and test sets
+            test_idx = k_indices[k]
+            train_idx = np.hstack([k_indices[i] for i in range(k_fold) if i != k])
+            
+            x_train, y_train = tx[train_idx], y[train_idx]
+            x_test, y_test = tx[test_idx], y[test_idx]
+            
+            # Train on training set and compute test MSE
+            w, _ = ridge_regression(y_train, x_train, lambda_)
+            mse_test = compute_loss_mse(y_test, x_test, w)
+            mse_test_total += mse_test
+        
+        avg_mse_test = mse_test_total / k_fold
+        print(f"Lambda: {lambda_}, Average Test MSE: {avg_mse_test}")
+        
+        # Update best lambda based on test MSE
+        if avg_mse_test < best_mse:
+            best_mse = avg_mse_test
+            best_lambda = lambda_
+    
+    print(f"Best lambda: {best_lambda} with MSE: {best_mse}")
+    
+    # Train on full dataset using the best lambda
+    w_best, _ = ridge_regression(y, tx, best_lambda)
+    
+    return best_lambda, w_best
