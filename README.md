@@ -37,10 +37,7 @@ The project is structured as follows:
 
 ```
 ├── data
-    ├── data_to_release
-        ├── x_train.csv
-        ├── x_test.csv
-        ├── y_train.csv
+    ├── dataset
 
 ├── docs
     ├── project1_description.pdf
