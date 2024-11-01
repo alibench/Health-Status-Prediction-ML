@@ -59,6 +59,7 @@ The project is structured as follows:
 <!-- Content of the files -->
 ## Content of the files
 
+* `submission.csv`: Contains the final submission of our model.
 * `helpers.py`: Contains helper functions to load the data and create csv submissions.
 * `implementations.py`: Contains the implementation of the six required algorithms.
 * `metrics.py`: Contains the metrics used to evaluate the models.
